@@ -12,19 +12,26 @@ const PatientList = () => {
   const fetchPatients = async () => {
     try {
       setLoading(true);
-      // In real app, uncomment this:
-      // const response = await getPatients();
-      // setPatients(response.data);
+      const response = await getPatients();
       
-      // Mock data for UI development
-      setTimeout(() => {
-        setPatients([
-          { _id: '1', name: 'John Doe', age: 45, gender: 'Male', bloodGroup: 'O+', phone: '+1 234 567 8900', aadhaarLast4: '4521', nfcUuid: '04:8E:22:9A:F4:65:80' },
-          { _id: '2', name: 'Jane Smith', age: 32, gender: 'Female', bloodGroup: 'A-', phone: '+1 987 654 3210', aadhaarLast4: '8832', nfcUuid: '04:7B:11:8C:E3:54:77' },
-          { _id: '3', name: 'Robert Johnson', age: 58, gender: 'Male', bloodGroup: 'B+', phone: '+1 555 123 4567', aadhaarLast4: '1190', nfcUuid: null },
-        ]);
-        setLoading(false);
-      }, 800);
+      // The backend returns an envelope: { success: true, count: X, data: [...] }
+      // OR an array directly if it was altered. Let's handle both.
+      const patientData = response.data?.data || response.data || [];
+      
+      // Map the backend structure (personalInfo, medicalInfo) to the flat structure expected by the table
+      const formattedPatients = patientData.map(p => ({
+        _id: p._id,
+        name: p.personalInfo?.name || 'Unknown',
+        age: p.personalInfo?.age || 'N/A',
+        gender: p.personalInfo?.gender || 'N/A',
+        bloodGroup: p.medicalInfo?.bloodGroup || 'N/A',
+        phone: p.personalInfo?.phone || 'N/A',
+        aadhaarLast4: p.personalInfo?.aadhaarNumber ? p.personalInfo.aadhaarNumber.slice(-4) : 'N/A',
+        nfcUuid: p.nfcUuid
+      }));
+
+      setPatients(formattedPatients);
+      setLoading(false);
     } catch (error) {
       toast.error('Failed to load patients');
       setLoading(false);
