@@ -13,20 +13,32 @@ const RegisterPatient = () => {
   const handleSubmit = async (data) => {
     try {
       setIsLoading(true);
-      // In a real app:
-      // const response = await createPatient(data);
-      // setCreatedPatient(response.data);
       
-      // Mock successful creation with an NFC UUID returned
-      setTimeout(() => {
-        setCreatedPatient({
-          ...data,
-          _id: 'new_id_' + Math.random().toString(36).substr(2, 9),
-          nfcUuid: '04:' + Array.from({length: 6}, () => Math.floor(Math.random()*256).toString(16).toUpperCase().padStart(2, '0')).join(':')
-        });
-        toast.success('Patient registered successfully!');
-        setIsLoading(false);
-      }, 1000);
+      // Map flat form data to nested backend structure
+      const formattedData = {
+        personalInfo: {
+          name: data.name,
+          age: data.age,
+          gender: data.gender,
+          bloodGroup: data.bloodGroup,
+          phone: data.phone,
+          emergencyContact: data.emergencyContact,
+          address: data.address,
+          aadhaarLast4: data.aadhaarLast4
+        },
+        medicalInfo: {
+          allergies: data.allergies,
+          chronicConditions: data.chronicConditions,
+          currentMedications: data.medications,
+          insuranceProvider: data.insuranceProvider,
+          insurancePolicyNo: data.insurancePolicyNo
+        }
+      };
+
+      const response = await createPatient(formattedData);
+      setCreatedPatient(response.data?.data || response.data);
+      toast.success('Patient registered successfully!');
+      setIsLoading(false);
       
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to register patient');
