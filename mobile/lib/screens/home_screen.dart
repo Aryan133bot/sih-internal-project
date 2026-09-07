@@ -27,11 +27,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _checkNfc() async {
-    bool available = await _nfcService.isNfcAvailable();
-    if (!available && mounted) {
-      setState(() {
-        _statusMessage = 'NFC is not available on this device.\nPlease use Search.';
-      });
+    try {
+      bool available = await _nfcService.isNfcAvailable();
+      if (!available && mounted) {
+        setState(() {
+          _statusMessage = 'NFC is not available on this device.\nPlease use Search.';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _statusMessage = 'NFC is not available on this device.\nPlease use Search.';
+        });
+      }
     }
   }
 

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'providers/auth_provider.dart';
 import 'screens/login_screen.dart';
@@ -32,14 +31,20 @@ class NfcMedCardApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, auth, _) {
+        Widget homeWidget;
         if (auth.isLoading) {
-          return const MaterialApp(
-            home: Scaffold(body: Center(child: CircularProgressIndicator())),
+          homeWidget = const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
           );
+        } else if (auth.isAuthenticated) {
+          homeWidget = const HomeScreen();
+        } else {
+          homeWidget = const LoginScreen();
         }
 
         return MaterialApp(
           title: 'NFC MedCard',
+          debugShowCheckedModeBanner: false,
           theme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.fromSeed(
@@ -47,38 +52,37 @@ class NfcMedCardApp extends StatelessWidget {
               primary: AppConstants.primaryColor,
               secondary: AppConstants.secondaryColor,
             ),
-            textTheme: GoogleFonts.interTextTheme(
-              Theme.of(context).textTheme,
-            ),
             appBarTheme: const AppBarTheme(
               backgroundColor: AppConstants.primaryColor,
               foregroundColor: Colors.white,
             ),
           ),
-          initialRoute: auth.isAuthenticated ? '/home' : '/login',
+          home: homeWidget,
+          routes: {
+            '/login': (_) => const LoginScreen(),
+            '/home': (_) => const HomeScreen(),
+            '/search': (_) => const SearchScreen(),
+            '/issue_card': (_) => const IssueCardScreen(),
+            '/qr_scan': (_) => const QRScannerScreen(),
+          },
           onGenerateRoute: (settings) {
             switch (settings.name) {
-              case '/login':
-                return MaterialPageRoute(builder: (_) => const LoginScreen());
-              case '/home':
-                return MaterialPageRoute(builder: (_) => const HomeScreen());
               case '/patient_detail':
                 final patient = settings.arguments as Patient;
-                return MaterialPageRoute(builder: (_) => PatientDetailScreen(patient: patient));
+                return MaterialPageRoute(
+                    builder: (_) =>
+                        PatientDetailScreen(patient: patient));
               case '/visit_history':
                 final patientId = settings.arguments as String;
-                return MaterialPageRoute(builder: (_) => VisitHistoryScreen(patientId: patientId));
+                return MaterialPageRoute(
+                    builder: (_) =>
+                        VisitHistoryScreen(patientId: patientId));
               case '/add_visit':
                 final patient = settings.arguments as Patient;
-                return MaterialPageRoute(builder: (_) => AddVisitScreen(patient: patient));
-              case '/search':
-                return MaterialPageRoute(builder: (_) => const SearchScreen());
-              case '/issue_card':
-                return MaterialPageRoute(builder: (_) => const IssueCardScreen());
-              case '/qr_scan':
-                return MaterialPageRoute(builder: (_) => const QRScannerScreen());
+                return MaterialPageRoute(
+                    builder: (_) => AddVisitScreen(patient: patient));
               default:
-                return MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Route not found'))));
+                return null;
             }
           },
         );

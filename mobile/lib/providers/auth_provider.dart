@@ -16,12 +16,17 @@ class AuthProvider with ChangeNotifier {
   bool get isAdmin => _user?['role'] == 'admin';
 
   Future<void> checkAuth() async {
-    final token = await _authService.getToken();
-    if (token != null) {
-      _user = await _authService.getUser();
-      _isAuthenticated = true;
-    } else {
+    try {
+      final token = await _authService.getToken();
+      if (token != null) {
+        _user = await _authService.getUser();
+        _isAuthenticated = true;
+      } else {
+        _isAuthenticated = false;
+      }
+    } catch (e) {
       _isAuthenticated = false;
+      _user = null;
     }
     _isLoading = false;
     notifyListeners();
