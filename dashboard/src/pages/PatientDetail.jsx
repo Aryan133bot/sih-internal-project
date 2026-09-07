@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Activity, Clock, CreditCard, Edit, Trash2, User, Droplet, Phone, MapPin, AlertCircle, ShieldCheck } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import toast from 'react-hot-toast';
+import { getPatient } from '../services/api';
 
 const PatientDetail = () => {
   const { id } = useParams();
@@ -12,34 +13,46 @@ const PatientDetail = () => {
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
-    // Mock API call
-    setTimeout(() => {
-      setPatient({
-        _id: id,
-        name: 'John Doe',
-        age: 45,
-        gender: 'Male',
-        bloodGroup: 'O+',
-        phone: '+1 234 567 8900',
-        emergencyContact: '+1 234 567 8901',
-        address: '123 Medical Way, Health City, HC 12345',
-        aadhaarLast4: '4521',
-        nfcUuid: '04:8E:22:9A:F4:65:80',
-        allergies: ['Penicillin', 'Peanuts'],
-        chronicConditions: ['Type 2 Diabetes', 'Hypertension'],
-        medications: [
-          { name: 'Metformin', dosage: '500mg', frequency: 'Twice daily' },
-          { name: 'Lisinopril', dosage: '10mg', frequency: 'Once daily' }
-        ],
-        insuranceProvider: 'HealthGuard Plus',
-        insurancePolicyNo: 'HG-987654321',
-        visits: [
-          { date: '2023-10-15', doctor: 'Dr. Smith', department: 'Cardiology', reason: 'Regular checkup' },
-          { date: '2023-08-02', doctor: 'Dr. Johnson', department: 'General', reason: 'Fever and cough' }
-        ]
-      });
-      setLoading(false);
-    }, 800);
+    const fetchPatientData = async () => {
+      try {
+        setLoading(true);
+        const response = await getPatient(id);
+        const p = response.data?.data || response.data;
+        
+        // Map backend mongoose model to frontend expected UI shape
+        setPatient({
+          _id: p._id,
+          name: p.personalInfo?.name || 'Unknown',
+          age: p.personalInfo?.age,
+          gender: p.personalInfo?.gender,
+          bloodGroup: p.personalInfo?.bloodGroup,
+          phone: p.personalInfo?.phone || 'N/A',
+          emergencyContact: p.personalInfo?.emergencyContact || 'N/A',
+          address: p.personalInfo?.address,
+          aadhaarLast4: p.personalInfo?.aadhaarLast4,
+          abhaId: p.personalInfo?.abhaId,
+          nfcUuid: p.nfcUuid || 'Not Assigned',
+          personalInfo: p.personalInfo || {},
+          allergies: p.medicalInfo?.allergies || [],
+          chronicConditions: p.medicalInfo?.chronicConditions || [],
+          medications: p.medicalInfo?.currentMedications || [],
+          insuranceProvider: p.medicalInfo?.insuranceProvider,
+          insurancePolicyNo: p.medicalInfo?.insurancePolicyNo,
+          visits: p.visitHistory?.map(v => ({
+            date: new Date(v.date).toLocaleDateString(),
+            doctor: v.doctor?.name || 'Unknown Doctor',
+            department: v.department || 'General',
+            reason: v.diagnosis || 'Checkup'
+          })) || []
+        });
+        setLoading(false);
+      } catch (error) {
+        toast.error('Failed to load patient details');
+        setLoading(false);
+      }
+    };
+    
+    fetchPatientData();
   }, [id]);
 
   if (loading) {
