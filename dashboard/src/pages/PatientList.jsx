@@ -14,19 +14,16 @@ const PatientList = () => {
       setLoading(true);
       const response = await getPatients();
       
-      // The backend returns an envelope: { success: true, count: X, data: [...] }
-      // OR an array directly if it was altered. Let's handle both.
       const patientData = response.data?.data || response.data || [];
       
-      // Map the backend structure (personalInfo, medicalInfo) to the flat structure expected by the table
       const formattedPatients = patientData.map(p => ({
         _id: p._id,
         name: p.personalInfo?.name || 'Unknown',
         age: p.personalInfo?.age || 'N/A',
         gender: p.personalInfo?.gender || 'N/A',
-        bloodGroup: p.medicalInfo?.bloodGroup || 'N/A',
+        bloodGroup: p.personalInfo?.bloodGroup || 'N/A',
         phone: p.personalInfo?.phone || 'N/A',
-        aadhaarLast4: p.personalInfo?.aadhaarNumber ? p.personalInfo.aadhaarNumber.slice(-4) : 'N/A',
+        aadhaarLast4: p.personalInfo?.aadhaarLast4 || 'N/A',
         nfcUuid: p.nfcUuid
       }));
 
